@@ -759,6 +759,11 @@ class QuizGame {
     this.userAnswers = [];
     this.incorrectQuestionIds = [];
     this.isRetryMode = false;
+    this.round2MatchesMade = [];
+    this.round2ShuffledPairs = null;
+    this.round2ShuffledEnglish = null;
+    this.selectedArabicMatch = null;
+    this.selectedEnglishMatch = null;
 
     this.hudStudentName.textContent = this.studentName;
     this.updateHUD();
@@ -768,6 +773,11 @@ class QuizGame {
 
   resetGame() {
     this.nameInput.value = "";
+    this.round2MatchesMade = [];
+    this.round2ShuffledPairs = null;
+    this.round2ShuffledEnglish = null;
+    this.selectedArabicMatch = null;
+    this.selectedEnglishMatch = null;
     this.showScreen(this.welcomeScreen);
     this.updateHUD();
   }
@@ -787,14 +797,6 @@ class QuizGame {
       }
     }
 
-    const currentDisplayNumber = Math.min(this.currentQuestionIndex + 1, this.totalQuestions);
-    this.hudQuestionCounter.textContent = `Question ${currentDisplayNumber} of ${this.totalQuestions}`;
-
-    const percent = Math.round((currentDisplayNumber / this.totalQuestions) * 100);
-    this.hudPercentCounter.textContent = `${percent}% Completed`;
-    this.progressFillBar.style.width = `${percent}%`;
-    this.progressFillBar.setAttribute("aria-valuenow", percent);
-
     // Current Round Badge
     const roundNumber = this.getCurrentRoundNumber();
     const roundTitles = [
@@ -806,6 +808,22 @@ class QuizGame {
     const roundIcons = ["🧭", "🤲", "✍️", "🌟"];
     this.hudRoundIcon.textContent = roundIcons[roundNumber - 1];
     this.hudRoundName.textContent = roundTitles[roundNumber - 1];
+
+    if (roundNumber === 2) {
+      const matchCount = (this.round2MatchesMade || []).length;
+      this.hudQuestionCounter.textContent = `Round 2: Match It! • ${matchCount} of 5 Pairs Matched`;
+      const percent = Math.round(((5 + matchCount) / this.totalQuestions) * 100);
+      this.hudPercentCounter.textContent = `${percent}% Completed`;
+      this.progressFillBar.style.width = `${percent}%`;
+      this.progressFillBar.setAttribute("aria-valuenow", percent);
+    } else {
+      const currentDisplayNumber = Math.min(this.currentQuestionIndex + 1, this.totalQuestions);
+      this.hudQuestionCounter.textContent = `Question ${currentDisplayNumber} of ${this.totalQuestions}`;
+      const percent = Math.round((currentDisplayNumber / this.totalQuestions) * 100);
+      this.hudPercentCounter.textContent = `${percent}% Completed`;
+      this.progressFillBar.style.width = `${percent}%`;
+      this.progressFillBar.setAttribute("aria-valuenow", percent);
+    }
   }
 
   getCurrentRoundNumber() {
@@ -828,10 +846,23 @@ class QuizGame {
     this.feedbackBox.innerHTML = "";
     this.feedbackBox.className = "feedback-message-box";
     this.nextQuestionBtn.style.display = "none";
+    this.nextQuestionBtn.classList.remove("pulse-glow");
 
     // Check if quiz finished
     if (this.currentQuestionIndex >= this.totalQuestions) {
       this.finishQuiz();
+      return;
+    }
+
+    if (this.isRetryMode && this.retryQuestions && this.retryQuestions[this.currentQuestionIndex]) {
+      const item = this.retryQuestions[this.currentQuestionIndex];
+      if (item.type === 'mcq') {
+        this.renderMultipleChoiceQuestion(item.data);
+      } else if (item.type === 'match') {
+        this.renderMatchingRound();
+      } else if (item.type === 'fill') {
+        this.renderFillInBlankQuestion(item.data);
+      }
       return;
     }
 
@@ -841,9 +872,7 @@ class QuizGame {
       const qData = this.quizData.round1[this.currentQuestionIndex];
       this.renderMultipleChoiceQuestion(qData);
     } else if (roundNum === 2) {
-      // In Round 2, each item is 1 of the 5 matches
-      const matchIndex = this.currentQuestionIndex - 5;
-      this.renderMatchingRound(matchIndex);
+      this.renderMatchingRound();
     } else if (roundNum === 3) {
       const fillIndex = this.currentQuestionIndex - 10;
       const qData = this.quizData.round3[fillIndex];
@@ -962,25 +991,26 @@ class QuizGame {
   // ROUND 2: MATCH IT! (DRAG & DROP + TAP-TO-MATCH)
   // ==========================================================================
 
-  renderMatchingRound(itemIndex) {
+  renderMatchingRound() {
     // If it's the start of Round 2, shuffle and prepare the 5 pairs
-    if (itemIndex === 0 || !this.round2ShuffledPairs) {
+    if (!this.round2ShuffledPairs || this.round2ShuffledPairs.length === 0) {
       this.round2ShuffledPairs = [...this.quizData.round2.pairs].sort(() => Math.random() - 0.5);
       this.round2ShuffledEnglish = [...this.quizData.round2.pairs].sort(() => Math.random() - 0.5);
       this.round2MatchesMade = [];
     }
 
     const r2Data = this.quizData.round2;
-    this.qCategoryTag.textContent = `Round 2: Match It! • Pair ${itemIndex + 1} of 5`;
+    const totalMatched = (this.round2MatchesMade || []).length;
+    this.qCategoryTag.textContent = `Round 2: Match It! • ${totalMatched} of 5 Pairs Matched`;
 
     let html = `
       <div class="q-prompt-box">
         <h3 class="q-title">${r2Data.title}</h3>
-        <p class="q-subtitle">Tap or drag each English meaning to match its sacred Arabic phrase. Works smoothly on touches and mice!</p>
+        <p class="q-subtitle">Tap an Arabic phrase, then tap its matching English meaning (or drag and drop)!</p>
       </div>
 
       <div class="match-instructions-banner">
-        <span>✨ <strong>Instructions:</strong> Tap an Arabic card, then tap its matching English card (or drag and drop)!</span>
+        <span>✨ <strong>Goal:</strong> Match all 5 sacred phrases (${totalMatched}/5 matched). Connect every word to its meaning!</span>
       </div>
 
       <div class="matching-arena">
@@ -1036,6 +1066,24 @@ class QuizGame {
 
     this.dynamicQuestionBody.innerHTML = html;
     this.setupMatchingInteractions();
+
+    // Show Continue button if matches exist or all are completed
+    if (totalMatched >= 5) {
+      this.feedbackBox.className = "feedback-message-box success-msg";
+      this.feedbackBox.innerHTML = `
+        <span class="feedback-icon">🌟</span>
+        <div>
+          <strong>MashaAllah! All 5 pairs matched! (+50 pts total)</strong>
+          <span class="feedback-explanation">Click below to proceed to Round 3 challenges!</span>
+        </div>
+      `;
+      this.nextQuestionBtn.innerHTML = "<span>Continue to Round 3 ➔</span>";
+      this.nextQuestionBtn.classList.add("pulse-glow");
+      this.nextQuestionBtn.style.display = "inline-flex";
+    } else if (totalMatched > 0) {
+      this.nextQuestionBtn.innerHTML = "<span>Continue to Round 3 ➔</span>";
+      this.nextQuestionBtn.style.display = "inline-flex";
+    }
   }
 
   setupMatchingInteractions() {
@@ -1112,7 +1160,7 @@ class QuizGame {
     if (arId === enId) {
       // Correct Match!
       sounds.playMatchDing();
-      confetti.burst(25);
+      confetti.burst(30);
       arCard.classList.remove("selected");
       enCard.classList.remove("selected");
       arCard.classList.add("matched");
@@ -1121,34 +1169,55 @@ class QuizGame {
       arCard.querySelector(".match-badge-indicator").textContent = "✅";
       enCard.querySelector(".match-badge-indicator").textContent = "✅";
 
-      this.round2MatchesMade.push(arId);
-      this.score += 10;
-      this.hudScore.textContent = this.score;
+      if (!this.round2MatchesMade.includes(arId)) {
+        this.round2MatchesMade.push(arId);
+        this.score += 10;
+        this.hudScore.textContent = this.score;
+
+        const pairData = this.quizData.round2.pairs.find(p => p.id === arId);
+
+        // Record answer
+        this.userAnswers.push({
+          id: `r2_${arId}`,
+          round: 2,
+          questionText: `Match Arabic: ${pairData.arabic}`,
+          chosenText: pairData.english,
+          correctText: pairData.english,
+          isCorrect: true,
+          explanation: pairData.explanation
+        });
+      }
 
       const pairData = this.quizData.round2.pairs.find(p => p.id === arId);
+      const totalMatched = this.round2MatchesMade.length;
+      this.updateHUD();
 
-      this.feedbackBox.className = "feedback-message-box success-msg";
-      this.feedbackBox.innerHTML = `
-        <span class="feedback-icon">🎉</span>
-        <div>
-          <strong>MashaAllah! Match made: ${pairData.arabic} = ${pairData.english}! (+10 pts)</strong>
-          <span class="feedback-explanation">${pairData.explanation}</span>
-        </div>
-      `;
-
-      // Record answer
-      this.userAnswers.push({
-        id: `r2_${arId}`,
-        round: 2,
-        questionText: `Match Arabic: ${pairData.arabic}`,
-        chosenText: pairData.english,
-        correctText: pairData.english,
-        isCorrect: true,
-        explanation: pairData.explanation
-      });
-
-      // Show next button to advance question step
-      this.nextQuestionBtn.style.display = "inline-flex";
+      if (totalMatched >= 5) {
+        sounds.playRoundComplete();
+        confetti.burst(80);
+        this.feedbackBox.className = "feedback-message-box success-msg";
+        this.feedbackBox.innerHTML = `
+          <span class="feedback-icon">🌟</span>
+          <div>
+            <strong>MashaAllah! All 5 pairs matched! (+50 pts total)</strong>
+            <span class="feedback-explanation">You've mastered all sacred vocabulary in Surah At-Tin! Click Continue to enter Round 3!</span>
+          </div>
+        `;
+        this.nextQuestionBtn.innerHTML = "<span>Continue to Round 3 ➔</span>";
+        this.nextQuestionBtn.classList.add("pulse-glow");
+        this.nextQuestionBtn.style.display = "inline-flex";
+      } else {
+        this.feedbackBox.className = "feedback-message-box success-msg";
+        this.feedbackBox.innerHTML = `
+          <span class="feedback-icon">🎉</span>
+          <div>
+            <strong>MashaAllah! (${totalMatched}/5) Matched: ${pairData.arabic} = ${pairData.english}! (+10 pts)</strong>
+            <span class="feedback-explanation">${pairData.explanation}</span>
+          </div>
+        `;
+        this.nextQuestionBtn.innerHTML = "<span>Continue to Round 3 ➔</span>";
+        this.nextQuestionBtn.style.display = "inline-flex";
+      }
 
     } else {
       // Incorrect Match
@@ -1314,7 +1383,21 @@ class QuizGame {
   // ==========================================================================
 
   advanceQuestion() {
+    if (this.isRetryMode) {
+      this.currentQuestionIndex++;
+      this.renderCurrentQuestion();
+      return;
+    }
+
     const currentRound = this.getCurrentRoundNumber();
+
+    // Round 2 (Match It): Advancing always completes Round 2 and takes the student to Round 3
+    if (currentRound === 2) {
+      this.currentQuestionIndex = 10; // Round 3 starts at index 10
+      this.celebrateRoundCompletion(2);
+      return;
+    }
+
     this.currentQuestionIndex++;
     const newRound = this.getCurrentRoundNumber();
 
@@ -1480,11 +1563,32 @@ class QuizGame {
       return;
     }
 
-    alert(`Starting Practice Mode for your ${this.incorrectQuestionIds.length} missed question(s)! Bismillah!`);
+    // Build the retry questions list from incorrect IDs
+    this.retryQuestions = [];
+    this.incorrectQuestionIds.forEach(id => {
+      let q = this.quizData.round1.find(item => item.id === id);
+      if (q) { this.retryQuestions.push({ round: 1, type: 'mcq', data: q }); return; }
+      if (id.startsWith('r2_')) {
+        const pairId = id.replace('r2_', '');
+        const p = this.quizData.round2.pairs.find(item => item.id === pairId);
+        if (p) { this.retryQuestions.push({ round: 2, type: 'match', data: p }); return; }
+      }
+      q = this.quizData.round3.find(item => item.id === id);
+      if (q) { this.retryQuestions.push({ round: 3, type: 'fill', data: q }); return; }
+      q = this.quizData.round4.find(item => item.id === id);
+      if (q) { this.retryQuestions.push({ round: 4, type: 'mcq', data: q }); return; }
+    });
+
+    if (this.retryQuestions.length === 0) {
+      this.resetGame();
+      return;
+    }
+
+    alert(`Starting Practice Mode for your ${this.retryQuestions.length} missed question(s)! Bismillah!`);
 
     // Reset score and load only missed questions
     this.isRetryMode = true;
-    this.totalQuestions = this.incorrectQuestionIds.length;
+    this.totalQuestions = this.retryQuestions.length;
     this.currentQuestionIndex = 0;
     this.score = 0;
     this.userAnswers = [];
