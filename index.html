@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Surah At-Tin Adventure! — Grade 5 Islamic Studies Quiz</title>
+  <meta name="description" content="An exciting, interactive Islamic learning adventure based on Surah At-Tin for Grade 5 students. Learn, play, answer, and become a Qur'an Champion!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Canvas for festive confetti effects -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Islamic Geometric Pattern Top Banner -->
+  <header class="app-header" role="banner">
+    <div class="header-container">
+      <div class="logo-group">
+        <span class="crescent-icon" aria-hidden="true">🌙</span>
+        <div>
+          <h1 class="app-title">The Surah At-Tin Adventure!</h1>
+          <p class="app-tagline">Learn, Play, Answer &amp; Become a Qur'an Champion!</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="audio-toggle-btn" class="icon-btn" title="Toggle Sound Effects" aria-label="Toggle Sound Effects">
+          <span id="audio-icon" aria-hidden="true">🔊</span>
+          <span class="btn-text">Sound ON</span>
+        </button>
+        <button id="surah-text-btn" class="secondary-btn" title="View Surah At-Tin Verses">
+          <span aria-hidden="true">📖</span> Read Surah
+        </button>
+        <button id="teacher-mode-btn" class="secondary-btn teacher-badge" title="Teacher Dashboard">
+          <span aria-hidden="true">👩‍🏫</span> Teacher Mode
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Wrapper -->
+  <main class="main-wrapper" id="app-container">
+
+    <!-- SCREEN 1: WELCOME SCREEN -->
+    <section id="welcome-screen" class="view-screen active" aria-labelledby="welcome-title">
+      <div class="card welcome-card">
+        <div class="welcome-hero-image">
+          <img src="assets/garden_fig_olive.jpg" alt="Peaceful garden with fig trees and olive trees under a sunny sky with a crescent moon" class="hero-img">
+          <div class="hero-overlay-badge">
+            <span>🌿 Grade 5 Islamic Studies 🌿</span>
+          </div>
+        </div>
+
+        <div class="welcome-content">
+          <div class="bismillah-badge" dir="rtl" lang="ar">
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </div>
+          <h2 id="welcome-title" class="welcome-heading">Welcome to The Surah At-Tin Adventure! 🍃</h2>
+          <p class="welcome-subtitle">“Complete the challenges, earn stars, and test your knowledge of Surah At-Tin!”</p>
+
+          <div class="adventure-overview-grid">
+            <div class="overview-step">
+              <span class="step-num">1</span>
+              <div class="step-icon">🧭</div>
+              <h4>Qur'an Explorer</h4>
+              <p>5 Fun Multiple Choice questions about the Surah</p>
+            </div>
+            <div class="overview-step">
+              <span class="step-num">2</span>
+              <div class="step-icon">🤲</div>
+              <h4>Match It!</h4>
+              <p>Drag or tap to match sacred Arabic words to meanings</p>
+            </div>
+            <div class="overview-step">
+              <span class="step-num">3</span>
+              <div class="step-icon">✍️</div>
+              <h4>Fill the Words</h4>
+              <p>Complete the holy verses with the word bank</p>
+            </div>
+            <div class="overview-step">
+              <span class="step-num">4</span>
+              <div class="step-icon">🌟</div>
+              <h4>Qur'an Champion</h4>
+              <p>Reflect on the beautiful moral lessons for our life</p>
+            </div>
+          </div>
+
+          <!-- Name Entry Form -->
+          <form id="start-form" class="name-entry-form" onsubmit="event.preventDefault();">
+            <div class="input-group">
+              <label for="student-name-input">Enter Your Champion Name:</label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input 
+                  type="text" 
+                  id="student-name-input" 
+                  placeholder="e.g. Zayd, Maryam, Yusuf..." 
+                  maxlength="35"
+                  required
+                  autocomplete="name"
+                >
+              </div>
+            </div>
+            <button type="submit" id="start-adventure-btn" class="primary-btn pulse-glow">
+              <span>🚀 Start Adventure!</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: ACTIVE QUIZ SCREEN -->
+    <section id="quiz-screen" class="view-screen" aria-live="polite">
+      <!-- HUD / Top Bar: Progress, Score, Round, Stars -->
+      <div class="quiz-hud card">
+        <div class="hud-top-row">
+          <div class="student-info">
+            <span class="badge-avatar">🌟</span>
+            <span class="student-display-name" id="hud-student-name">Champion</span>
+          </div>
+
+          <div class="round-badge" id="hud-round-pill">
+            <span id="hud-round-icon">🧭</span>
+            <span id="hud-round-name">Round 1: Qur'an Explorer</span>
+          </div>
+
+          <div class="score-stars-group">
+            <div class="hud-stars" id="hud-stars-container" title="Bonus Stars Earned">
+              <span class="star-icon dimmed" id="star-1">⭐</span>
+              <span class="star-icon dimmed" id="star-2">⭐</span>
+              <span class="star-icon dimmed" id="star-3">⭐</span>
+              <span class="star-icon dimmed" id="star-4">⭐</span>
+            </div>
+            <div class="hud-score-chip">
+              <span class="score-label">Score:</span>
+              <span class="score-number" id="hud-score">0</span>
+              <span class="score-total">/ 200</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar and Counter -->
+        <div class="progress-section">
+          <div class="progress-meta">
+            <span id="hud-question-counter">Question 1 of 20</span>
+            <span id="hud-percent-counter">5% Completed</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="progress-fill-bar" style="width: 5%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Content Container -->
+      <div class="question-container card" id="question-card">
+        <div class="round-header-banner" id="question-round-banner">
+          <div class="round-category-tag" id="q-category-tag">Multiple Choice</div>
+          <button id="hint-btn" class="hint-btn" title="Get a friendly clue!">
+            <span aria-hidden="true">💡</span> Hint
+          </button>
+        </div>
+
+        <!-- Dynamic Question Area injected by JS -->
+        <div id="dynamic-question-body">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Feedback & Action Bar -->
+        <div class="question-footer-bar">
+          <div class="feedback-message-box" id="feedback-message-box" aria-live="assertive">
+            <!-- Dynamic encouraging feedback -->
+          </div>
+          <div class="footer-action-buttons">
+            <button id="next-question-btn" class="primary-btn" style="display: none;">
+              <span>Continue ➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: ROUND CELEBRATION MODAL / TRANSITION SCREEN -->
+    <div id="round-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="round-modal-title">
+      <div class="modal-card celebration-card">
+        <div class="celebration-animation">
+          <span class="big-emoji">🌟</span>
+          <span class="flying-star star-left">✨</span>
+          <span class="flying-star star-right">✨</span>
+        </div>
+        <h3 id="round-modal-title" class="round-modal-heading">Round Completed! MashaAllah!</h3>
+        <p id="round-modal-text" class="round-modal-desc">You've unlocked a bonus star for finishing this challenge!</p>
+        <div class="round-stats-pill">
+          <span id="round-modal-round-score">+50 Points</span>
+          <span id="round-modal-star-earned">⭐ Star Collected!</span>
+        </div>
+        <button id="start-next-round-btn" class="primary-btn pulse-glow">
+          <span>Start Next Challenge ➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: FINAL RESULTS SCREEN -->
+    <section id="results-screen" class="view-screen" aria-labelledby="results-title">
+      <div class="card results-card">
+        <div class="results-header">
+          <div class="trophy-badge" id="results-badge-icon">🏆</div>
+          <h2 id="results-title" class="results-main-title">🎉 MASHALLAH! YOU DID IT! 🎉</h2>
+          <p class="results-sub-title">“Congratulations, <span id="res-student-name">Qur'an Champion</span>! You have completed the Surah At-Tin Adventure!”</p>
+        </div>
+
+        <!-- Score Breakdown Cards -->
+        <div class="results-stats-grid">
+          <div class="stat-box primary-stat">
+            <span class="stat-label">Total Score</span>
+            <div class="stat-value"><span id="res-score-num">190</span><span class="stat-denominator">/ 200</span></div>
+            <span class="stat-sub" id="res-percentage">95%</span>
+          </div>
+          <div class="stat-box success-stat">
+            <span class="stat-label">Correct Answers</span>
+            <div class="stat-value" id="res-correct-count">19</div>
+            <span class="stat-sub">out of 20 questions</span>
+          </div>
+          <div class="stat-box retry-stat">
+            <span class="stat-label">Questions to Practise</span>
+            <div class="stat-value" id="res-incorrect-count">1</div>
+            <span class="stat-sub">Great opportunities to learn</span>
+          </div>
+          <div class="stat-box stars-stat">
+            <span class="stat-label">Stars Earned</span>
+            <div class="stat-value" id="res-stars-count">⭐⭐⭐⭐</div>
+            <span class="stat-sub">All rounds mastered</span>
+          </div>
+        </div>
+
+        <!-- Performance Feedback Banner -->
+        <div class="performance-message-banner" id="res-performance-banner">
+          <div class="perf-icon" id="res-perf-icon">🌟</div>
+          <div class="perf-text">
+            <h4 id="res-perf-title">Excellent! You are a Surah At-Tin Champion!</h4>
+            <p id="res-perf-detail">You have shown wonderful understanding of the verses, meanings, and lessons of this blessed Surah!</p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="results-actions">
+          <button id="play-again-btn" class="primary-btn">
+            <span>🔄 Play Again</span>
+          </button>
+          <button id="review-answers-btn" class="secondary-btn">
+            <span>📝 Review My Answers</span>
+          </button>
+          <button id="practise-incorrect-btn" class="retry-btn">
+            <span>🎯 Practise Incorrect Questions (<span id="retry-count-badge">0</span>)</span>
+          </button>
+          <button id="print-certificate-btn" class="gold-btn">
+            <span>📜 Print Champion Certificate</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 5: REVIEW ANSWERS MODAL -->
+    <div id="review-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <div class="modal-card review-modal-card">
+        <div class="modal-header">
+          <h3 id="review-modal-title">📝 Review Your Answers — Surah At-Tin Adventure</h3>
+          <button class="close-modal-btn" id="close-review-btn" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="review-modal-body" id="review-list-container">
+          <!-- List of all questions with student answers and explanations -->
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-btn" id="done-review-btn">Back to Results</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: SURAH AT-TIN TEXT & AUDIO MODAL -->
+    <div id="surah-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="surah-modal-title">
+      <div class="modal-card surah-reference-card">
+        <div class="modal-header">
+          <div class="header-title-box">
+            <h3 id="surah-modal-title">📖 Surah At-Tin (The Fig) — سورة التين</h3>
+            <span class="surah-sub-info">Surah 95 • 8 Verses (Ayat) • Revealed in Makkah</span>
+          </div>
+          <button class="close-modal-btn" id="close-surah-btn" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="surah-modal-body">
+          <div class="bismillah-block" dir="rtl" lang="ar">
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+            <span class="bismillah-trans">In the name of Allah, the Entirely Merciful, the Especially Merciful.</span>
+          </div>
+
+          <div class="verses-list">
+            <div class="verse-item">
+              <span class="verse-num">1</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">وَالتِّينِ وَالزَّيْتُونِ ﴿١﴾</p>
+                <p class="translit">Wat-teeni waz-zaytoon</p>
+                <p class="translation">"By the fig and the olive,"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">2</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">وَطُورِ سِينِينَ ﴿٢﴾</p>
+                <p class="translit">Wa toori seeneen</p>
+                <p class="translation">"And [by] Mount Sinai,"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">3</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">وَهَٰذَا الْبَلَدِ الْأَمِينِ ﴿٣﴾</p>
+                <p class="translit">Wa haazal baladil ameen</p>
+                <p class="translation">"And [by] this secure city [Makkah],"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">4</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">لَقَدْ خَلَقْنَا الْإِنسَانَ فِي أَحْسَنِ تَقْوِيمٍ ﴿٤﴾</p>
+                <p class="translit">Laqad khalaqnal insaana fee ahsani taqweem</p>
+                <p class="translation">"We have certainly created man in the best stature / form;"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">5</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">ثُمَّ رَدَدْنَاهُ أَسْفَلَ سَافِلِينَ ﴿٥﴾</p>
+                <p class="translit">Thumma radadnaahu asfala saafileen</p>
+                <p class="translation">"Then We return him to the lowest of the low,"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">6</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ فَلَهُمْ أَجْرٌ غَيْرُ مَمْنُونٍ ﴿٦﴾</p>
+                <p class="translit">Illal lazeena aamanoo wa 'amilus saalihaati falahum ajrun ghayru mamnoon</p>
+                <p class="translation">"Except for those who believe and do righteous deeds, for they will have a reward uninterrupted."</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">7</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">فَمَا يُكَذِّبُكَ بَعْدُ بِالدِّينِ ﴿٧﴾</p>
+                <p class="translit">Famaa yukazzibuka ba'du bid deen</p>
+                <p class="translation">"So what yet causes you to deny the Recompense [the Day of Judgement]?"</p>
+              </div>
+            </div>
+            <div class="verse-item">
+              <span class="verse-num">8</span>
+              <div class="verse-content">
+                <p class="arabic-verse" dir="rtl" lang="ar">أَلَيْسَ اللَّهُ بِأَحْكَمِ الْحَاكِمِينَ ﴿٨﴾</p>
+                <p class="translit">Alaisal laahu bi-ahkamil haakimeen</p>
+                <p class="translation">"Is not Allah the most just of judges?"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="primary-btn" id="close-surah-footer-btn">Ready to Adventure!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 7: TEACHER DASHBOARD MODAL -->
+    <div id="teacher-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="teacher-modal-title">
+      <div class="modal-card teacher-modal-card">
+        <div class="modal-header">
+          <div class="header-title-box">
+            <h3 id="teacher-modal-title">👩‍🏫 Teacher Dashboard &amp; Question Manager</h3>
+            <span class="surah-sub-info">Grade 5 Islamic Studies • Surah At-Tin Examination Unit</span>
+          </div>
+          <button class="close-modal-btn" id="close-teacher-btn" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="teacher-tabs">
+          <button class="teacher-tab-btn active" data-tab="tab-overview">📊 Student Performance</button>
+          <button class="teacher-tab-btn" data-tab="tab-questions">📑 Question Bank &amp; Answer Key</button>
+          <button class="teacher-tab-btn" data-tab="tab-settings">⚙️ Classroom Controls</button>
+        </div>
+
+        <div class="teacher-tab-content active" id="tab-overview">
+          <div class="teacher-summary-banner">
+            <div>
+              <h4>Current Session: <span id="teacher-student-name">None yet</span></h4>
+              <p>Score: <strong id="teacher-student-score">0 / 200</strong> (<span id="teacher-student-pct">0%</span>)</p>
+            </div>
+            <button id="print-teacher-summary-btn" class="secondary-btn">🖨️ Print Student Summary</button>
+          </div>
+          <div class="teacher-rounds-breakdown" id="teacher-rounds-stats">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <div class="teacher-tab-content" id="tab-questions">
+          <div class="teacher-q-actions">
+            <p class="note-text">Review all 20 questions across the 4 rounds, verify answers, and view teaching notes.</p>
+            <button id="reset-custom-questions-btn" class="secondary-btn btn-sm">Reset to Default Questions</button>
+          </div>
+          <div class="teacher-question-list" id="teacher-q-list">
+            <!-- Populated dynamically with all 20 questions -->
+          </div>
+        </div>
+
+        <div class="teacher-tab-content" id="tab-settings">
+          <div class="teacher-settings-grid">
+            <div class="setting-card">
+              <h4>Classroom Presentation Mode</h4>
+              <p>Display larger typography and higher contrast for interactive whiteboards / smart projectors.</p>
+              <button id="toggle-large-font-btn" class="secondary-btn">Toggle Large Display Mode</button>
+            </div>
+            <div class="setting-card">
+              <h4>Audio Settings</h4>
+              <p>Turn on/off synthesized sound effects for quiet classroom environments.</p>
+              <button id="toggle-teacher-sound-btn" class="secondary-btn">Toggle Sound (Currently ON)</button>
+            </div>
+            <div class="setting-card">
+              <h4>Reset Entire Quiz</h4>
+              <p>Clear all current student answers, return to welcome screen for next student.</p>
+              <button id="teacher-reset-btn" class="danger-btn">Reset Quiz Now</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="secondary-btn" id="close-teacher-footer-btn">Close Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HINT POPUP MODAL -->
+    <div id="hint-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="hint-modal-title">
+      <div class="modal-card hint-card">
+        <div class="hint-icon">💡</div>
+        <h4 id="hint-modal-title" class="hint-heading">Champion Clue!</h4>
+        <p id="hint-modal-text" class="hint-body">Here is your hint...</p>
+        <button id="close-hint-btn" class="primary-btn btn-sm">Got it, thanks!</button>
+      </div>
+    </div>
+
+    <!-- CERTIFICATE PRINT TEMPLATE (Hidden on screen, styled for print / view) -->
+    <div id="certificate-print-area" class="certificate-container" style="display: none;">
+      <div class="cert-border-outer">
+        <div class="cert-border-inner">
+          <div class="cert-watermark">🍃</div>
+          <div class="cert-header">
+            <span class="cert-crescent">🌙 🌟</span>
+            <div class="cert-bismillah" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+            <h1 class="cert-title">CERTIFICATE OF ACHIEVEMENT</h1>
+            <p class="cert-subtitle">Grade 5 Islamic Studies — Surah At-Tin Adventure</p>
+          </div>
+
+          <div class="cert-body">
+            <p class="cert-award-text">This is proudly awarded to:</p>
+            <h2 class="cert-student-name" id="cert-student-name">Champion Name</h2>
+            <p class="cert-reason">
+              For outstanding participation, deep knowledge, and successful completion of all 20 challenges in 
+              <strong>The Surah At-Tin Adventure</strong>.
+            </p>
+          </div>
+
+          <div class="cert-stats-row">
+            <div class="cert-stat-badge">
+              <span class="cert-stat-val" id="cert-score-val">200 / 200</span>
+              <span class="cert-stat-lbl">Total Score</span>
+            </div>
+            <div class="cert-stat-badge">
+              <span class="cert-stat-val" id="cert-pct-val">100%</span>
+              <span class="cert-stat-lbl">Grade</span>
+            </div>
+            <div class="cert-stat-badge">
+              <span class="cert-stat-val">⭐⭐⭐⭐</span>
+              <span class="cert-stat-lbl">4 Stars Earned</span>
+            </div>
+          </div>
+
+          <div class="cert-footer">
+            <div class="cert-sig-box">
+              <div class="cert-sig-line"></div>
+              <span class="cert-sig-title">Islamic Studies Teacher</span>
+            </div>
+            <div class="cert-seal-box">
+              <div class="cert-seal">
+                <span>QUR'AN<br>CHAMPION<br>GRADE 5</span>
+              </div>
+            </div>
+            <div class="cert-sig-box">
+              <div class="cert-sig-line" id="cert-date-line">October 2026</div>
+              <span class="cert-sig-title">Date of Completion</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cert-screen-actions">
+        <button id="cert-print-action-btn" class="primary-btn">🖨️ Print Now</button>
+        <button id="cert-close-action-btn" class="secondary-btn">Close Certificate</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>“The Surah At-Tin Adventure!” • Designed with love for Grade 5 Islamic Studies • <em>Bismillah</em> to begin, <em>Alhamdulillah</em> for knowledge!</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
